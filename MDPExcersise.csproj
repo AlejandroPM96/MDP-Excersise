@@ -11,5 +11,10 @@
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.42.0.1769" />
     <PackageReference Include="Syncfusion.XlsIO.Net.Core" Version="17.3.0.27" />
   </ItemGroup>
+  <ItemGroup>
+  <None Update="app_client_secret.json">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
 
 </Project>
