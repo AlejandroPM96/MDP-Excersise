@@ -4,12 +4,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-// using CsvHelper;
-
-using Google.Apis.Sheets.v4;
-using Google.Apis.Sheets.v4.Data;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
 
 namespace MDPExcersise
 {
@@ -29,6 +23,7 @@ namespace MDPExcersise
     class Node{
         public double value;
         public string direction;
+        public double reward;
         public int x {get; set;}
         public int y {get; set;}
 
@@ -36,6 +31,7 @@ namespace MDPExcersise
             this.x = x;
             this.y = y;
             this.value = -0.04;
+            this.reward = -0.04;
             this.direction = "R";
         }
 
@@ -47,6 +43,8 @@ namespace MDPExcersise
     class MDPGrid{
         public Node[,] grid;
         public double alpha = 0.9;
+        public string prevState="";
+        public string State="";
 
         public List<List<object>> history = new List<List<object>>();
         public List<List<object>> directionHistory = new List<List<object>>();
@@ -68,17 +66,19 @@ namespace MDPExcersise
             this.dict.Add(5,"DL");
             this.dict.Add(6,"D");
             this.dict.Add(7,"DR");
-            this.dict.Add(9,"S");
+            this.dict.Add(8,"S");
         }
         public void setWalls(Position[] wallPositions){
             for(int i = 0 ; i<wallPositions.GetLength(0);i++){
                 this.grid[wallPositions[i].x,wallPositions[i].y].value = -10;
+                this.grid[wallPositions[i].x,wallPositions[i].y].reward = -10;
             }
         }
 
         public void setGoals(Position[] goalsPositions, int[] goalValues){
             for(int i = 0 ; i<goalsPositions.GetLength(0);i++){
                 this.grid[goalsPositions[i].x,goalsPositions[i].y].value = goalValues[i];
+                this.grid[goalsPositions[i].x,goalsPositions[i].y].reward = goalValues[i];
             }
         }
 
@@ -101,27 +101,27 @@ namespace MDPExcersise
             return this.dict[maxIndex];
         }
         public void newValue(int i, int j){//example 0,2
-            double cellValue = this.grid[i,j].value + this.alpha*MyMax(
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.9 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.9 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.9 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,
-                checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01
+            double cellValue = this.grid[i,j].reward + this.alpha*MyMax(
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.9 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.9 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.9 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2),
+                Math.Round(checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2)
             );
             String direction = getDirection(
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.9 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.9 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.9 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,
-                checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,
-                checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.9 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.9 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.9 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,2),
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2),
+                Math.Round(checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2)
             );
             this.grid[i,j].direction = direction;
             this.grid[i,j].value = cellValue;
@@ -142,16 +142,22 @@ namespace MDPExcersise
             newentry = new List<object>(){"value",this.grid[ic,jc],"-","-","-","-","-","-"};
             this.history.Add(newentry);
             this.directionHistory.Add(newentry);
+            string nextState="";
+            for(int i = 0; i<this.grid.GetLength(0);i++){
+                for(int j = 0; j<this.grid.GetLength(1);j++){
+                    nextState=this.grid[i,j].direction;
+                }   
+            }
+            this.prevState = this.State;
+            this.State=nextState;
+
+
         }
         public void evalGrid(){
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
-                    if(this.grid[i,j].value == -10 || this.grid[i,j].value == 20 || this.grid[i,j].value == 10){
-                        this.grid[i,j].value = this.grid[i,j].value;
-                    }else{
-                        newValue(i,j);
-                        saveState(i,j);
-                    }
+                    newValue(i,j);
+                    saveState(i,j);
                 }
             }
         }
@@ -174,7 +180,12 @@ namespace MDPExcersise
             grid += "----------------------------------------------\n";
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
-                    grid+= string.Format("{0:N2}",this.grid[i,j].direction) + "\t|";
+                    if(this.grid[i,j].reward == -10){
+                        grid+= "   W\t|";
+                    }else{
+                        grid+= string.Format("{0:N2}",this.grid[i,j].direction) + "\t|";
+                    }
+                    
                 }
                 grid += "\n";
                 grid += "----------------------------------------------\n";
@@ -195,79 +206,6 @@ namespace MDPExcersise
     }
     class Program
     {
-        public void WriteTsv<T>(IEnumerable<T> data, TextWriter output)
-            {
-                PropertyDescriptorCollection props = TypeDescriptor.GetProperties(typeof(T));
-                foreach (PropertyDescriptor prop in props)
-                {
-                    output.Write(prop.DisplayName); // header
-                    output.Write("\t");
-                }
-                output.WriteLine();
-                foreach (T item in data)
-                {
-                    foreach (PropertyDescriptor prop in props)
-                    {
-                        output.Write(prop.Converter.ConvertToString(
-                            prop.GetValue(item)));
-                        output.Write("\t");
-                    }
-                    output.WriteLine();
-                }
-            }
-            static readonly string[] Scopes = { SheetsService.Scope.Spreadsheets };
-            static readonly string ApplicationName = "Dot Tutorials";
-            static readonly string sheet = "sheetsAPI";
-            static readonly string SpreadsheetId = "1zooAOBAVr90wHI-CGAtAa_UG6fwdvXsacuPBPFJc5gE";
-            static SheetsService service;
-        static void Init(){
-            GoogleCredential credential;
-            //Reading Credentials File...
-            using (var stream = new FileStream("app_client_secret.json", FileMode.Open, FileAccess.Read))
-            {
-                credential = GoogleCredential.FromStream(stream)
-                    .CreateScoped(Scopes);
-            }
-            // Creating Google Sheets API service...
-            service = new SheetsService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = ApplicationName,
-            });
-        }
-        static void AddRow(MDPGrid grid) { 
-            // Specifying Column Range for reading...
-            var range = $"{sheet}!A:N";
-            var valueRange = new ValueRange();
-            // Data for another Student...
-            var oblist = new List<object>() { "Harry", "80", "77", "62", "98" };
-            foreach (var row in grid.history)
-            {
-                oblist = row;
-                valueRange.Values = new List<IList<object>> { oblist };
-                // Append the above record...
-                var appendRequest = service.Spreadsheets.Values.Append(valueRange, SpreadsheetId, range);
-                appendRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.AppendRequest.ValueInputOptionEnum.USERENTERED;
-                var appendReponse = appendRequest.Execute();
-            }
-
-            //direction printing
-            // Specifying Column Range for reading...
-            // range = $"{sheet}!P:Z";
-            // valueRange = new ValueRange();
-            // // Data for another Student...
-            // oblist = new List<object>() { "Harry", "80", "77", "62", "98" };
-            // foreach (var row in grid.directionHistory)
-            // {
-            //     oblist = row;
-            //     valueRange.Values = new List<IList<object>> { oblist };
-            //     // Append the above record...
-            //     var appendRequest = service.Spreadsheets.Values.Append(valueRange, SpreadsheetId, range);
-            //     appendRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.AppendRequest.ValueInputOptionEnum.USERENTERED;
-            //     var appendReponse = appendRequest.Execute();
-            // }
-            
-        }
         static String makeCSV(MDPGrid grid) {
             string csv = "";
             foreach (var row in grid.history)
@@ -309,11 +247,15 @@ namespace MDPExcersise
             Console.WriteLine(grid.drawGrid());
             Console.WriteLine(grid.drawGridDirection());
             grid.evalGrid();
+            grid.evalGrid();
+            grid.evalGrid();
+            grid.evalGrid();
+            Console.WriteLine(grid.prevState==grid.State);
             Console.WriteLine(grid.drawGrid());
             Console.WriteLine(grid.drawGridDirection());
         
             // Init();
-            // AddRow(grid);
+            // // AddRow(grid);
             File.WriteAllText("valuedata.csv", makeCSV(grid));
             File.WriteAllText("directiondata.csv", makeCSVDirs(grid));
             
