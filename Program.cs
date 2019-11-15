@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Linq;
-using System.Collections;
+using System.IO;
 using System.Collections.Generic;
+using System.ComponentModel;
+
+using Google.Apis.Sheets.v4;
+using Google.Apis.Sheets.v4.Data;
 
 namespace MDPExcersise
 {
@@ -113,7 +117,6 @@ namespace MDPExcersise
                 checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01
             );
             this.grid[i,j].direction = direction;
-            Console.WriteLine(this.grid[i,j].direction);
             this.grid[i,j].value = cellValue;
         }
 
@@ -168,8 +171,35 @@ namespace MDPExcersise
     }
     class Program
     {
+        public void WriteTsv<T>(IEnumerable<T> data, TextWriter output)
+            {
+                PropertyDescriptorCollection props = TypeDescriptor.GetProperties(typeof(T));
+                foreach (PropertyDescriptor prop in props)
+                {
+                    output.Write(prop.DisplayName); // header
+                    output.Write("\t");
+                }
+                output.WriteLine();
+                foreach (T item in data)
+                {
+                    foreach (PropertyDescriptor prop in props)
+                    {
+                        output.Write(prop.Converter.ConvertToString(
+                            prop.GetValue(item)));
+                        output.Write("\t");
+                    }
+                    output.WriteLine();
+                }
+            }
+            static readonly string[] Scopes = { SheetsService.Scope.Spreadsheets };
+            static readonly string ApplicationName = "Dot Tutorials";
+            static readonly string sheet = "sheetsAPI";
+            static readonly string SpreadsheetId = "1zooAOBAVr90wHI-CGAtAa_UG6fwdvXsacuPBPFJc5gE";
+            static SheetsService service;
+
         static void Main(string[] args)
         {
+
             Console.WriteLine("stuff");
             MDPGrid grid = new MDPGrid(5,5);
             Position[] goalPositions = new Position[2]{new Position(0,3),new Position(4,4)};
@@ -179,14 +209,12 @@ namespace MDPExcersise
             grid.setWalls(wallPositions);
             grid.setGoals(goalPositions, goalValues);
             Console.WriteLine(grid.drawGrid());
-            // grid.newValue(0,0);
-            // grid.newValue(0,1);
-            // grid.newValue(0,2);
-            //  grid.newValue(1,2);
-            // Console.WriteLine(grid.drawGrid());
             grid.evalGrid();
             Console.WriteLine(grid.drawGrid());
             Console.WriteLine(grid.drawGridDirection());
+        
+
+            
         }
     }
 }

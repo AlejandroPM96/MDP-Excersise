@@ -5,4 +5,11 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.Apis" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.42.0.1769" />
+    <PackageReference Include="Syncfusion.XlsIO.Net.Core" Version="17.3.0.27" />
+  </ItemGroup>
+
 </Project>
