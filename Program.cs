@@ -21,23 +21,23 @@ namespace MDPExcersise
         }
     }
     class Node{
-        public double value;
+        public float value;
         public string direction;
-        public double reward;
+        public float reward;
         public int x {get; set;}
         public int y {get; set;}
 
         public Node(int x, int y){
             this.x = x;
             this.y = y;
-            this.value = -0.04;
-            this.reward = -0.04;
+            this.value = -0.04f;
+            this.reward = -0.04f;
             this.direction = "R";
         }
-        public Node(int x, int y, double reward){
+        public Node(int x, int y, float reward){
             this.x = x;
             this.y = y;
-            this.value = -0.04;
+            this.value = -0.04f;
             this.reward = reward;
             this.direction = "R";
         }
@@ -50,7 +50,7 @@ namespace MDPExcersise
     class MDPGrid{
         public Node[,] grid;
         public Node[,] prevGrid;
-        public double alpha = 0.9;
+        public float alpha = 0.9f;
         public string prevState="";
         public string State="";
 
@@ -94,17 +94,17 @@ namespace MDPExcersise
             this.grid = new Node[width,height];
             string inputPath=filePath;
             var reader = new StreamReader(File.OpenRead(inputPath));
-            List<List<double>> listA = new List<List<double>>();
-            double[,] rewardsInput = new double[width,height]; 
+            List<List<float>> listA = new List<List<float>>();
+            float[,] rewardsInput = new float[width,height]; 
             int rowC = 0;
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
                 var values = line.Split(',');
-                List<double> rowValues = new List<double>();
+                List<float> rowValues = new List<float>();
                 for (int column = 0; column<values.Length;column++)
                 {
-                    rewardsInput[rowC,column]=Convert.ToDouble(values[column]);
+                    rewardsInput[rowC,column]=float.Parse(values[column]);
                 }
                 rowC++;
             }
@@ -150,7 +150,7 @@ namespace MDPExcersise
             }
         }
 
-        public double checkBounds(int x, int y){
+        public float checkBounds(int x, int y){
             if(x<0 || y<0){
                 return -10;
             }
@@ -159,35 +159,35 @@ namespace MDPExcersise
             }
             return this.grid[x,y].value;
         }
-        public double MyMax(params double[] values)
+        public float MyMax(params float[] values)
         {
             return values.Max();
         }
-        public string getDirection(params double[] values){
-            double maxValue = values.Max();
+        public string getDirection(params float[] values){
+            float maxValue = values.Max();
             int maxIndex = values.ToList().IndexOf(maxValue);
             return this.dict[maxIndex];
         }
         public void newValue(int i, int j){//example 0,2
-            double cellValue = this.grid[i,j].reward + this.alpha*MyMax(
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.9 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.9 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.9 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2)
+            float cellValue = this.grid[i,j].reward + this.alpha*MyMax(
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.9f+ checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.9f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.9f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.9f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.9f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.9f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.9f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.9f,2)
             );
             String direction = getDirection(
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.9 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.9 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.9 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2)
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.9f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.9f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.9f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.9f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.9f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.9f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.9f + checkBounds(i+1,j+1)*.01f,2),
+                MathF.Round(checkBounds(i,j)*.01f + checkBounds(i,j+1)*.01f + checkBounds(i-1,j+1)*.01f + checkBounds(i-1,j)*.01f + checkBounds(i-1,j-1)*.01f + checkBounds(i,j-1)*.01f + checkBounds(i+1,j-1)*.01f + checkBounds(i+1,j)*.01f + checkBounds(i+1,j+1)*.9f,2)
             );
             this.grid[i,j].direction = direction;
             this.grid[i,j].value = cellValue;
@@ -357,11 +357,7 @@ namespace MDPExcersise
             Console.WriteLine(grid.drawGridDirection());
             Console.WriteLine("Final iter: " +iter);
             
-
-            
-            
-            // Init();
-            // // // AddRow(grid);
+            //                '''''''''''''Takes a lot to write
             // File.WriteAllText("valuedata.csv", makeCSV(grid));
             // File.WriteAllText("directiondata.csv", makeCSVDirs(grid));
             
