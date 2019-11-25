@@ -34,6 +34,13 @@ namespace MDPExcersise
             this.reward = -0.04;
             this.direction = "R";
         }
+        public Node(int x, int y, double reward){
+            this.x = x;
+            this.y = y;
+            this.value = -0.04;
+            this.reward = reward;
+            this.direction = "R";
+        }
 
         public override string ToString(){
             return "Cell("+this.x+","+this.y+")"+" "+value;
@@ -42,6 +49,7 @@ namespace MDPExcersise
     
     class MDPGrid{
         public Node[,] grid;
+        public Node[,] prevGrid;
         public double alpha = 0.9;
         public string prevState="";
         public string State="";
@@ -50,6 +58,8 @@ namespace MDPExcersise
         public List<List<object>> directionHistory = new List<List<object>>();
 
         public IDictionary<int, string> dict = new Dictionary<int, string>();
+        public IDictionary<string, string> flechas = new Dictionary<string, string>();
+
         
         public MDPGrid(int width, int height){
             this.grid = new Node[width,height];
@@ -58,6 +68,7 @@ namespace MDPExcersise
                     this.grid[i,j] = new Node(i,j);
                 }
             }
+            
             this.dict.Add(0,"R");
             this.dict.Add(1,"UR");
             this.dict.Add(2,"U");
@@ -67,7 +78,64 @@ namespace MDPExcersise
             this.dict.Add(6,"D");
             this.dict.Add(7,"DR");
             this.dict.Add(8,"S");
+
+            this.flechas.Add("R","→");
+            this.flechas.Add("UR","↗");
+            this.flechas.Add("U","↑");
+            this.flechas.Add("UL","↖");
+            this.flechas.Add("L","←");
+            this.flechas.Add("DL","↙");
+            this.flechas.Add("D","↓");
+            this.flechas.Add("DR","↘");
+            this.flechas.Add("S","S");
         }
+
+        public MDPGrid(int width, int height, string filePath){
+            this.grid = new Node[width,height];
+            string inputPath=filePath;
+            var reader = new StreamReader(File.OpenRead(inputPath));
+            List<List<double>> listA = new List<List<double>>();
+            double[,] rewardsInput = new double[width,height]; 
+            int rowC = 0;
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                var values = line.Split(',');
+                List<double> rowValues = new List<double>();
+                for (int column = 0; column<values.Length;column++)
+                {
+                    rewardsInput[rowC,column]=Convert.ToDouble(values[column]);
+                }
+                rowC++;
+            }
+            
+            this.dict.Add(0,"R");
+            this.dict.Add(1,"UR");
+            this.dict.Add(2,"U");
+            this.dict.Add(3,"UL");
+            this.dict.Add(4,"L");
+            this.dict.Add(5,"DL");
+            this.dict.Add(6,"D");
+            this.dict.Add(7,"DR");
+            this.dict.Add(8,"S");
+
+            this.flechas.Add("R","→");
+            this.flechas.Add("UR","↗");
+            this.flechas.Add("U","↑");
+            this.flechas.Add("UL","↖");
+            this.flechas.Add("L","←");
+            this.flechas.Add("DL","↙");
+            this.flechas.Add("D","↓");
+            this.flechas.Add("DR","↘");
+            this.flechas.Add("S","S");
+            
+            for(int row = 0; row<grid.GetLength(0);row++){
+                for(int column = 0; column<grid.GetLength(1);column++){
+                    this.grid[row,column] = new Node(row,column,rewardsInput[row,column]);
+                }
+            }
+        }
+
         public void setWalls(Position[] wallPositions){
             for(int i = 0 ; i<wallPositions.GetLength(0);i++){
                 this.grid[wallPositions[i].x,wallPositions[i].y].value = -10;
@@ -109,8 +177,7 @@ namespace MDPExcersise
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2),
-                Math.Round(checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2)
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2)
             );
             String direction = getDirection(
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.9 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
@@ -120,8 +187,7 @@ namespace MDPExcersise
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.9 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.9 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2),
                 Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.9 + checkBounds(i+1,j+1)*.01,2),
-                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2),
-                Math.Round(checkBounds(i,j)*.9 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.01,2)
+                Math.Round(checkBounds(i,j)*.01 + checkBounds(i,j+1)*.01 + checkBounds(i-1,j+1)*.01 + checkBounds(i-1,j)*.01 + checkBounds(i-1,j-1)*.01 + checkBounds(i,j-1)*.01 + checkBounds(i+1,j-1)*.01 + checkBounds(i+1,j)*.01 + checkBounds(i+1,j+1)*.9,2)
             );
             this.grid[i,j].direction = direction;
             this.grid[i,j].value = cellValue;
@@ -129,6 +195,7 @@ namespace MDPExcersise
         public void saveState(int ic, int jc){
             List<object> newentry = new List<object>();
             List<object> newentryDirection = new List<object>();
+            this.prevState = this.State;
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
                     newentry.Add(this.grid[i,j].value);
@@ -145,15 +212,28 @@ namespace MDPExcersise
             string nextState="";
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
-                    nextState=this.grid[i,j].direction;
+                    nextState+=this.grid[i,j].direction;
                 }   
             }
-            this.prevState = this.State;
-            this.State=nextState;
+            this.State = nextState;
 
 
         }
+        public void copyTable(){
+            this.prevGrid = new Node[this.grid.GetLength(0),this.grid.GetLength(1)];
+            for (int row = 0; row < this.grid.GetLength(0); row++)
+            {
+                for (int column = 0; column < this.grid.GetLength(1); column++)
+                {
+                    this.prevGrid[row,column] = new Node(row,column);
+                    this.prevGrid[row,column].direction = this.grid[row,column].direction;
+                    this.prevGrid[row,column].reward = this.grid[row,column].reward;
+                    this.prevGrid[row,column].value = this.grid[row, column].value;
+                }
+            }
+        }
         public void evalGrid(){
+            this.copyTable();
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
                     newValue(i,j);
@@ -163,7 +243,7 @@ namespace MDPExcersise
         }
         public string drawGrid(){
             string grid="";
-            grid += "----------------------------------------------\n";
+            grid += "-------------Values-------------\n";
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
                     grid+= string.Format("{0:N2}",this.grid[i,j].value) + "\t|";
@@ -177,13 +257,17 @@ namespace MDPExcersise
 
         public string drawGridDirection(){
             string grid="";
-            grid += "----------------------------------------------\n";
+            grid += "-------------Policy-------------\n";
             for(int i = 0; i<this.grid.GetLength(0);i++){
                 for(int j = 0; j<this.grid.GetLength(1);j++){
                     if(this.grid[i,j].reward == -10){
                         grid+= "   W\t|";
                     }else{
-                        grid+= string.Format("{0:N2}",this.grid[i,j].direction) + "\t|";
+                        if(this.grid[i,j].reward > 0){
+                            grid+= "   G\t|";
+                        }else{
+                            grid+= string.Format("{0:N2}",this.grid[i,j].direction) + "\t|";
+                        }
                     }
                     
                 }
@@ -232,32 +316,54 @@ namespace MDPExcersise
             }
             return csv;
         }
-
+        public static bool convergence(MDPGrid MDPgrid){
+            Node[,] grid = MDPgrid.grid;
+            Node[,] Prevgrid = MDPgrid.prevGrid;
+            for(int i = 0; i<MDPgrid.grid.GetLength(0);i++){
+                for(int j = 0; j<MDPgrid.grid.GetLength(1);j++){
+                    // Console.WriteLine(grid[i,j].direction+"ooooow"+ Prevgrid[i,j].direction);
+                    if(grid[i,j].direction != Prevgrid[i,j].direction){
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
         static void Main(string[] args)
         {
 
-            Console.WriteLine("stuff");
-            MDPGrid grid = new MDPGrid(10,15);
-            Position[] goalPositions = new Position[2]{new Position(9,9),new Position(0,14)};
-            Position[] wallPositions = new Position[13]{new Position(1,2),new Position(3,2),new Position(5,2),new Position(7,2),new Position(9,2),new Position(0,5),new Position(2,5),new Position(4,5),new Position(6,5),new Position(8,5),new Position(1,9),new Position(3,9),new Position(5,9)};
-            int[] goalValues = new int[2]{10,20};
+            
+            // Programatic way of calling the MDP
+            // MDPGrid grid = new MDPGrid(20,20);
+            // Position[] goalPositions = new Position[4]{new Position(9,9),new Position(0,14),new Position(15,14),new Position(19,19)};
+            // Position[] wallPositions = new Position[13]{new Position(1,2),new Position(3,2),new Position(5,2),new Position(7,2),new Position(9,2),new Position(0,5),new Position(2,5),new Position(4,5),new Position(6,5),new Position(8,5),new Position(1,9),new Position(3,9),new Position(5,9)};
+            // int[] goalValues = new int[4]{10,20,20,30};
+            // grid.setWalls(wallPositions);
+            // grid.setGoals(goalPositions, goalValues);
+            Console.WriteLine("Initial State");
+            MDPGrid grid =new MDPGrid(15,10,"input.csv");
+            Console.WriteLine(grid.drawGrid());
+            Console.WriteLine(grid.drawGridDirection());
+            int iter = 0;
+            grid.evalGrid();
+            while(!convergence(grid)){
+                grid.evalGrid();
+                iter++;
+                Console.WriteLine("iter: " +iter);
+                
+                Console.WriteLine(convergence(grid));
+            }
+            Console.WriteLine(grid.drawGrid());
+            Console.WriteLine(grid.drawGridDirection());
+            Console.WriteLine("Final iter: " +iter);
+            
 
-            grid.setWalls(wallPositions);
-            grid.setGoals(goalPositions, goalValues);
-            Console.WriteLine(grid.drawGrid());
-            Console.WriteLine(grid.drawGridDirection());
-            grid.evalGrid();
-            grid.evalGrid();
-            grid.evalGrid();
-            grid.evalGrid();
-            Console.WriteLine(grid.prevState==grid.State);
-            Console.WriteLine(grid.drawGrid());
-            Console.WriteLine(grid.drawGridDirection());
-        
+            
+            
             // Init();
-            // // AddRow(grid);
-            File.WriteAllText("valuedata.csv", makeCSV(grid));
-            File.WriteAllText("directiondata.csv", makeCSVDirs(grid));
+            // // // AddRow(grid);
+            // File.WriteAllText("valuedata.csv", makeCSV(grid));
+            // File.WriteAllText("directiondata.csv", makeCSVDirs(grid));
             
         }
     }
