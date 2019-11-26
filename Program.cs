@@ -278,6 +278,21 @@ namespace MDPExcersise
             return grid;
         }
 
+        public string createPolicy() {
+            string grid = "";
+
+            for (int i = 0; i < this.grid.GetLength(0); i++)
+            {
+                for (int j = 0; j < this.grid.GetLength(1); j++)
+                {
+                    grid += string.Format("{0:N2}", this.grid[i, j].direction) + ",";
+                }
+                grid = grid.Remove(grid.Length -1);
+                grid += "\n";
+            }
+            return grid;
+        }
+
         public override string ToString(){
             string r="";
             for(int i = 0; i<grid.GetLength(0);i++){
@@ -341,7 +356,7 @@ namespace MDPExcersise
             // grid.setWalls(wallPositions);
             // grid.setGoals(goalPositions, goalValues);
             Console.WriteLine("Initial State");
-            MDPGrid grid =new MDPGrid(15,10,"input.csv");
+            MDPGrid grid =new MDPGrid(15,10, "/Users/anak/Desktop/MDP-Excersise/input.csv");
             Console.WriteLine(grid.drawGrid());
             Console.WriteLine(grid.drawGridDirection());
             int iter = 0;
@@ -356,11 +371,12 @@ namespace MDPExcersise
             Console.WriteLine(grid.drawGrid());
             Console.WriteLine(grid.drawGridDirection());
             Console.WriteLine("Final iter: " +iter);
-            
+
             //                '''''''''''''Takes a lot to write
             // File.WriteAllText("valuedata.csv", makeCSV(grid));
             // File.WriteAllText("directiondata.csv", makeCSVDirs(grid));
-            
+            File.WriteAllText("/Users/anak/Desktop/MDP-Excersise/policy.csv", grid.createPolicy());
+
         }
     }
 }
