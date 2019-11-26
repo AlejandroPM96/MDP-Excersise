@@ -235,6 +235,7 @@ namespace MDPExcersise
         public void evalGrid(){
             this.copyTable();
             for(int i = 0; i<this.grid.GetLength(0);i++){
+                Console.WriteLine("row: " + i);
                 for(int j = 0; j<this.grid.GetLength(1);j++){
                     newValue(i,j);
                     saveState(i,j);
@@ -356,7 +357,8 @@ namespace MDPExcersise
             // grid.setWalls(wallPositions);
             // grid.setGoals(goalPositions, goalValues);
             Console.WriteLine("Initial State");
-            MDPGrid grid =new MDPGrid(15,10, "/Users/anak/Desktop/MDP-Excersise/input.csv");
+            // MDPGrid grid =new MDPGrid(15,10, "/Users/anak/Desktop/MDP-Excersise/input.csv");
+            MDPGrid grid =new MDPGrid(100,100, "input_unity.csv");
             Console.WriteLine(grid.drawGrid());
             Console.WriteLine(grid.drawGridDirection());
             int iter = 0;
@@ -365,17 +367,16 @@ namespace MDPExcersise
                 grid.evalGrid();
                 iter++;
                 Console.WriteLine("iter: " +iter);
-                
-                Console.WriteLine(convergence(grid));
+                // Console.WriteLine(grid.drawGrid());
+                // Console.WriteLine(grid.drawGridDirection());
+                // Console.WriteLine(convergence(grid));
             }
-            Console.WriteLine(grid.drawGrid());
-            Console.WriteLine(grid.drawGridDirection());
             Console.WriteLine("Final iter: " +iter);
 
             //                '''''''''''''Takes a lot to write
             // File.WriteAllText("valuedata.csv", makeCSV(grid));
             // File.WriteAllText("directiondata.csv", makeCSVDirs(grid));
-            File.WriteAllText("/Users/anak/Desktop/MDP-Excersise/policy.csv", grid.createPolicy());
+            File.WriteAllText("policy.csv", grid.createPolicy());
 
         }
     }
